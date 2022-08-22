@@ -1,305 +1,325 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <time.h>
-#include <string.h>
-#include <windows.h>
+#include <conio.h>
 
-#define ANSI_COLOR_RED "\x1b[31m"
-#define ANSI_COLOR_GREEN "\x1b[32m"
-#define ANSI_COLOR_YELLOW "\x1b[33m"
-#define ANSI_COLOR_BLUE "\x1b[34m"
-#define ANSI_COLOR_MAGENTA "\x1b[35m"
-#define ANSI_COLOR_CYAN "\x1b[36m"
-#define ANSI_COLOR_RESET "\x1b[0m"
+int ROW, COL, TOTAL_MOVES;
+int MATRIX_PUZZEL[4][4];
 
-// create matrix 4*4
-void createMatrix(int arr[][4])
+// Declaration of all function
+int WORKING_WITH_KEY(char);
+int CHECK_WIN_CONDITION();
+void DISPLAY_MATRIX_PUZZEL(char *);
+int CHECK_EXISTS(int);
+void RANDOME_NUMBER_GENERATED_IN_MATRIXPUZZEL();
+void GAME_OF_RULES();
+int EXIT_KEY(char key);
+void RESTART_THE_GAME();
+void DISPLAY_PLAYER_NAME(char[]);
+void DISPLAY_PLAYER_TOTAL_MOVES();
+void PLAY_GAME(char[]);
+void NUMBER_SHIFTING_GAME();
+
+int WORKING_WITH_KEY(char key)
 {
-    int n = 15;
-    int num[n], i, j;
-    for (i = 0; i < 15; i++) // These 1-15 number will be in th matrix
-        num[i] = i + 1;
-
-    srand(time(NULL)); // for random number generation
-
-    int lastIndex = n - 1, index;
-
-    for (i = 0; i < 4; i++)
-        for (j = 0; j < 4; j++)
-        {
-            if (lastIndex >= 0)
-            {
-                index = rand() % (lastIndex + 1); // idea : performing % operation by (lastIndex+1)
-                arr[i][j] = num[index];           // will give index , so put that num[index] number in matrix
-                num[index] = num[lastIndex--];    // and replace last number with this indexed positioned number
-            }                                     // and finally lastIndex--
-        }
-    arr[i - 1][j - 1] = 0; // last number is zero
+    if (key == 75 && COL < 3) // for right
+    {
+        int temp = MATRIX_PUZZEL[ROW][COL];
+        MATRIX_PUZZEL[ROW][COL] = MATRIX_PUZZEL[ROW][COL + 1];
+        MATRIX_PUZZEL[ROW][COL + 1] = temp;
+        COL++;
+        return 1;
+    }
+    else if (key == 72 && ROW < 3) // for down
+    {
+        int temp = MATRIX_PUZZEL[ROW][COL];
+        MATRIX_PUZZEL[ROW][COL] = MATRIX_PUZZEL[ROW + 1][COL];
+        MATRIX_PUZZEL[ROW + 1][COL] = temp;
+        ROW++;
+        return 1;
+    }
+    else if (key == 80 && ROW > 0) // for up
+    {
+        int temp = MATRIX_PUZZEL[ROW][COL];
+        MATRIX_PUZZEL[ROW][COL] = MATRIX_PUZZEL[ROW - 1][COL];
+        MATRIX_PUZZEL[ROW - 1][COL] = temp;
+        ROW--;
+        return 1;
+    }
+    else if (key == 77 && COL > 0) // for left
+    {
+        int temp = MATRIX_PUZZEL[ROW][COL];
+        MATRIX_PUZZEL[ROW][COL] = MATRIX_PUZZEL[ROW][COL - 1];
+        MATRIX_PUZZEL[ROW][COL - 1] = temp;
+        COL--;
+        return 1;
+    }
+    return 0;
 }
 
-// showing matrix
-void showMatrix(int arr[][4])
+int CHECK_WIN_CONDITION()
+{
+    int count = 0, i, j;
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            count++; // according to winning condition all num are sorted so we create count variable and update continuesoly
+            if (MATRIX_PUZZEL[i][j] != count)
+                return 0;
+            if (count == 15)
+                break;
+        }
+    }
+    return 1;
+}
+
+void DISPLAY_MATRIX_PUZZEL(char playerName[])
 {
     int i, j;
-    printf("--------------------\n");
+    DISPLAY_PLAYER_NAME(playerName);
+    DISPLAY_PLAYER_TOTAL_MOVES();
+    printf("\n\tYOU CAN EXIT THE GAME BY PRESSING 'E' OR 'e' DOUBLE TIME!"); // double because if user press e or E by mistake
+    fflush(stdin);
+    printf("\n---------------------\n");
     for (i = 0; i < 4; i++)
     {
         printf("|");
         for (j = 0; j < 4; j++)
         {
-            if (arr[i][j] != 0)
-                printf("%2d | ", arr[i][j]);
+            if (MATRIX_PUZZEL[i][j] == 32)
+                printf("%3c |", 32);
             else
-                printf("   | ");
+                printf("%3d |", MATRIX_PUZZEL[i][j]);
         }
         printf("\n");
     }
-
-    printf("--------------------\n");
+    printf("---------------------\n");
 }
 
-// winning check by this function
-int winner(int arr[][4])
+int CHECK_EXISTS(int randomeVal)
 {
-    int i, j, k = 1;
+    int i, j;
+    for (i = 0; i < 4; i++)
+        for (j = 0; j < 4; j++)
+            if (MATRIX_PUZZEL[i][j] == randomeVal)
+                return 0;
+    return 1;
+}
+
+void RANDOME_NUMBER_GENERATED_IN_MATRIXPUZZEL()
+{
+    int i, j, flag = 1, randomeVal;
+    srand(time(0)); // per execution randome number different generate
     for (i = 0; i < 4; i++)
     {
-        for (j = 0; j < 4; j++, k++)
-            if (arr[i][j] != k && k != 16)
-                break;
-        if (j < 4)
-            break;
+        j = 0;
+        while (j < 4)
+        {
+            randomeVal = rand() % 16 + 1; // %16 means i need only 1 - 15
+            if (CHECK_EXISTS(randomeVal)) // this function check any number should not be repeated
+            {
+                MATRIX_PUZZEL[i][j] = randomeVal;
+                j++;
+            }
+        }
     }
 
-    if (j < 4)
+    // Here we find 16, and convert 32 for space
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+            if (MATRIX_PUZZEL[i][j] == 16)
+            {
+                ROW = i, COL = j;
+                break;
+            }
+        }
+    }
+    MATRIX_PUZZEL[ROW][COL] = 32; // assign 32 for space
+}
+
+void GAME_OF_RULES()
+{
+    system("cls");
+    printf("\t\t\t\"NUMBER SHIFTING GAME 2.0\"");
+
+    printf("\n\n\tSOME BASIC RULE OF THIS GAME, YOU DEFINITLY UNDERSTANTD!");
+
+    printf("\n\nRULE NO.1  - YOU CAN MOVE ONLY 1 STEPS AT A TIME BY ARROWS KEY!");
+    printf("\n\t\tMOVE UP : by up arrow key");
+    printf("\n\t\tMOVE DOWN : by Down Arrow key");
+    printf("\n\t\tMOVE LEFT : by Left Arrow key");
+    printf("\n\t\tMOVE RIGHT : by Right Arrow key");
+
+    printf("\n\nRULE NO.2 - YOU CAN MOVE NUMBER AT EMPTY POSITION ONLY!");
+
+    printf("\n\nRULE NO.3 - FOR EACH VALID MOVE YOUR TOTAL NUMBER OF MOVE WILL BE DECREASED BY 1!");
+
+    printf("\n\nRULE NO.4 - WINNING SITUATION, NUMBER IN 4*4 MATRIX BE IN SORTED ORDER FROM 1 TO 15!");
+
+    printf("\n\n\t\tWINNING SITUATION");
+    printf("\n-------------------------\n");
+    printf("|  1  |  2  |  3  |  4  |\n");
+    printf("|  5  |  6  |  7  |  8  |\n");
+    printf("|  9  | 10  | 11  | 12  |\n");
+    printf("| 13  | 14  | 15  |     |");
+    printf("\n-------------------------\n");
+
+    printf("\nRULE NO.5 - YOU CAN EXIT THE GAME AT ANY TIME BY PRESSING 'E' OR 'e' DOUBLE TIME!"); // double because if user press e or E by mistake
+
+    printf("\n\nSO TRY TO WIN THE GAME IN MINIMUM NO. OF MOVE!");
+
+    printf("\nPRESS ANY KEY TO CONTINUE....");
+    getch();
+    getch();
+}
+
+int EXIT_KEY(char key)
+{
+    if (key == 'E' || key == 'e')
         return 0;
     return 1;
 }
 
-// swap function to swap two numbers
-void swap(int *x, int *y)
-{
-    *x = *x + *y;
-    *y = *x - *y;
-    *x = *x - *y;
-    printf("");
-}
-
-// Reads the user input character and return ascii value of that
-int readEnteredKey()
-{
-    char c;
-    c = _getch();
-    if (c == -32)
-        c = _getch();
-
-    return c;
-}
-
-// shift up function
-int shiftUp(int arr[][4])
-{
-    int i, j;
-    for (i = 0; i < 4; i++)
-    {
-        for (j = 0; j < 4; j++)
-            if (arr[i][j] == 0)
-                break;
-        if (j < 4)
-            break;
-    }
-    if (i == 3) // shifting not possible
-        return 0;
-
-    // Successfully swapped two numbers !
-    swap(&arr[i][j], &arr[i + 1][j]);
-    return 1; // Success
-}
-
-int shiftDown(int arr[][4])
-{
-    int i, j;
-    for (i = 0; i < 4; i++)
-    {
-        for (j = 0; j < 4; j++)
-            if (arr[i][j] == 0)
-                break;
-        if (j < 4)
-            break;
-    }
-    if (i == 0) // shifting not possible
-        return 0;
-    swap(&arr[i][j], &arr[i - 1][j]); // swap numbers
-
-    return 1; // shift up success
-}
-
-int shiftRight(int arr[][4])
-{
-    int i, j;
-    for (i = 0; i < 4; i++)
-    {
-        for (j = 0; j < 4; j++)
-            if (arr[i][j] == 0)
-                break;
-        if (j < 4)
-            break;
-    }
-    if (j == 0) // shifting not possible
-        return 0;
-
-    swap(&arr[i][j], &arr[i][j - 1]);
-
-    return 1; // shift up success
-}
-
-int shiftLeft(int arr[][4])
-{
-    int i, j;
-    for (i = 0; i < 4; i++)
-    {
-        for (j = 0; j < 4; j++)
-            if (arr[i][j] == 0)
-                break;
-        if (j < 4)
-            break;
-    }
-
-    if (j == 3) // shifting not possible
-        return 0;
-
-    swap(&arr[i][j], &arr[i][j + 1]);
-    return 1; // shift up success
-}
-
-// Game rules
-void gameRule(int arr[][4])
+void RESTART_THE_GAME()
 {
     system("cls");
-
-    int i, j, k = 1;
-
-    printf("\t\t  MATRIX PUZZLE\n");
-    printf("\n");
-    printf(ANSI_COLOR_RED "                 RULE OF THIS GAME                 \n" ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_RED "\n1.You can move only 1 step at a time by arrow key " ANSI_COLOR_RESET);
-    printf("\n\tMove Up   : by Up arrow key ");
-    printf("\n\tMove Down : by Down arrow key");
-    printf("\n\tMove Left : by Left arrow key");
-    printf("\n\tMove Right: by Right arrow key");
-
-    printf(ANSI_COLOR_RED "\n2.You can move number at empty position only " ANSI_COLOR_RESET);
-    printf("\n");
-    printf(ANSI_COLOR_RED "\n3. For each valid move : your total number of move will decreased by 1 \n" ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_RED "4. Wining situation : " ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_RED " Number in a 4*4 matrix should be in order from 1 to 15 " ANSI_COLOR_RESET);
-    printf("\n\n            winning situation:         \n");
-
-    printf(ANSI_COLOR_YELLOW "---------------------\n" ANSI_COLOR_RESET);
-
-    for (i = 0; i < 4; i++)
-    {
-        printf(ANSI_COLOR_YELLOW "| " ANSI_COLOR_RESET);
-        for (j = 0; j < 4; j++)
-        {
-            if (arr[i][j] != 0)
-                printf(ANSI_COLOR_YELLOW "%2d | " ANSI_COLOR_RESET, 4 * i + j + 1);
-            else
-                printf(ANSI_COLOR_YELLOW "   |" ANSI_COLOR_RESET);
-        }
-        printf("\n");
-    }
-
-    printf(ANSI_COLOR_YELLOW "---------------------\n" ANSI_COLOR_RESET);
-    printf("\n5.You can exit the game at any time by pressing 'E' or 'e' ");
-
-    printf("\nSo Try to win in minimum no of move \n");
-
-    printf("\nEnter any key to start.....   ");
-
-    int x = readEnteredKey();
-}
-
-// main function
-int main()
-{
-    int arr[4][4];    // matrix
-    int maxTry = 4; // maximum move
-    char name[20];
-    for (int k = 0; k < 3; k++)
-        printf("\n");
-    printf("Player Name: ");
-    scanf("%s", name);
-
-    system("cls"); // to clear screen
-
+    char opt;
+    printf("\n\n\tPRESS 'Y' FOR YES OR PRESS 'N' FOR NO");
     while (1)
     {
-        createMatrix(arr); // calling function to create  matrix
-        gameRule(arr);     // game rule function calling
-
-        while (!winner(arr)) // checking for winning situation
+        printf("\nCHOOSE YOUR OPTION: ");
+        scanf("%c", &opt);
+        if (opt == 'Y')
+            NUMBER_SHIFTING_GAME();
+        else if (opt == 'N')
         {
-            system("cls");
-            if (!maxTry) // for remaining zero move
-                break;
+            printf("\nTHANK-YOU FOR PLAYING GAME, VISIT AGAIN!");
+            exit(0);
+        }
+        else
+            printf("\nWRONG OPTION!");
+    }
+}
 
-            printf("\n\n  Player Name:  %s ,  Move remaining : %d\n\n", name, maxTry);
+int CHOOSE_LEVEL_OF_GAME()
+{
+    int level;
+    system("cls");
+    printf("\n\tLEVELS OF NUMBER SHIFTING GAME");
+    printf("\n\t\tLevel 1 - BEGINNER");
+    printf("\n\t\tLevel 2 - INTERMEDIATE");
+    printf("\n\t\tLevel 3 - ADVANCED");
+    printf("\n\t\tLevel 4 - MASTER");
+    printf("\n\t\tLevel 5 - STREAMERS");
+    printf("\n\t\tLevel 6 - PERSONALITIES");
+    while (1)
+    {
+        printf("\nCHOOSE YOUR LEVEL: ");
+        scanf("%d", &level);
+        if (level < 1 || level > 6)
+            printf("\n\nENTER LEVEL NO. NOT AVAIABLE!");
+        else
+            break;
+    }
+    return level;
+}
 
-            showMatrix(arr); // show matrix
+void NUMBER_SHIFTING_GAME()
+{
+    char playerName[20];
+    int levelOfGame;
+    printf("\t\t\t\"Welcome to Number Shifting Game\"");
+    printf("\n\nEnter Player Name: ");
+    gets(playerName);
+    GAME_OF_RULES();
+    RANDOME_NUMBER_GENERATED_IN_MATRIXPUZZEL();
+    levelOfGame = CHOOSE_LEVEL_OF_GAME();
+    switch (levelOfGame)
+    {
+    case 1:
+        TOTAL_MOVES = 500;
+        PLAY_GAME(playerName);
+        break;
+    case 2:
+        TOTAL_MOVES = 400;
+        PLAY_GAME(playerName);
+        break;
+    case 3:
+        TOTAL_MOVES = 300;
+        PLAY_GAME(playerName);
+        break;
+    case 4:
+        TOTAL_MOVES = 200;
+        PLAY_GAME(playerName);
+        break;
+    case 5:
+        TOTAL_MOVES = 100;
+        PLAY_GAME(playerName);
+        break;
+    case 6:
+        TOTAL_MOVES = 50;
+        PLAY_GAME(playerName);
+        break;
+    }
+}
 
-            int key = readEnteredKey(); // this will return ascii code of user entered key
+void PLAY_GAME(char playerName[])
+{
+    while (1)
+    {
+        char arrowKey;
+        system("cls");
+        DISPLAY_MATRIX_PUZZEL(playerName);
+        printf("\nPRESS ANY ARROW KEY...");
+        arrowKey = getch();
+        arrowKey = getch();
+        fflush(stdin);
+        if (EXIT_KEY(arrowKey))
+        {
+            if (WORKING_WITH_KEY(arrowKey))
+                TOTAL_MOVES--;
 
-            switch (key) // maping
+            if (CHECK_WIN_CONDITION())
             {
-            case 101: // ascii of E
-
-            case 69: // ascii of e
-                printf("\a\a\a\a\a\a\n     Thanks for Playing ! \n\a");
-                printf("\nHit 'Enter' to exit the game \n");
-                key = readEnteredKey();
-                return 0;
-
-            case 72: // arrow up
-                if (shiftUp(arr))
-                    maxTry--;
-                break;
-            case 80: // arrow down
-                if (shiftDown(arr))
-                    maxTry--;
-                break;
-            case 77: // arrow  right
-                if (shiftRight(arr))
-                    maxTry--;
-                break;
-            case 75: // arrow left
-                if (shiftLeft(arr))
-                    maxTry--;
-                break;
-            default:
-
-                printf("\n\n      \a\a Not Allowed \a");
+                printf("\n\nCONGRATULATIONS!, YOU WIN THE GAME");
+                printf("\nPRESS ANY KEY.....");
+                getch();
+                RESTART_THE_GAME();
             }
-
+        }
+        else // For Exit Purpose
+        {
+            printf("\n\nYOU ENTER 'E' OR 'e' KEYS FOR EXITS!");
+            printf("\nPRESS ANY KEY.....");
+            getch();
+            RESTART_THE_GAME();
         }
 
-        if (!maxTry)
-            printf(ANSI_COLOR_RED "\n\a          YOU LOSE !          \a\a\n" ANSI_COLOR_RESET);
-        else
-            printf(ANSI_COLOR_GREEN "\n\a!!!!!!!!!!!!!Congratulations  %s for winning this game !!!!!!!!!!!!!\n\a" ANSI_COLOR_RESET, name);
+        if (TOTAL_MOVES == 0)
+        {
+            printf("\n\nOOPS!, YOU LOSS THE GAME! YOUR TOTAL MOVES WILL BE EMPTY!");
+            printf("\nPRESS ANY KEY.....");
+            getch();
+            RESTART_THE_GAME();
+        }
+    } // while loop body
+}
 
-        fflush(stdin); // Will clear the buffer
-        char check;
-        printf(ANSI_COLOR_GREEN "\nWant to play again ? \n" ANSI_COLOR_RESET);
-        printf("enter 'y' to play again:  ");
-        scanf("%c", &check);
+void DISPLAY_PLAYER_NAME(char playerName[])
+{
+    printf("\n\n\tPLAYER NAME: %s", playerName);
+}
 
-        // Leave the game here itself !
-        if ((check != 'y') && (check != 'Y'))
-            break;
+void DISPLAY_PLAYER_TOTAL_MOVES()
+{
+    printf("\n\tREMAINING MOVES OF GAME: %d", TOTAL_MOVES - 1);
+}
 
-        maxTry = 4;
-    }
+int main()
+{
+    NUMBER_SHIFTING_GAME();
     return 0;
 }
